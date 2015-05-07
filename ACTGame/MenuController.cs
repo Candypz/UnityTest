@@ -1,20 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//游戏开始菜单
+
 public class MenuController : MonoBehaviour {
+    public static MenuController m_instance;
     public Color Purple;
     public SkinnedMeshRenderer headRenderer;
     public SkinnedMeshRenderer handRenderer;
     public Mesh[] headMeshArray;
     public Mesh[] handMeshArray;
     public SkinnedMeshRenderer[] bodyArry;
-    private Color[] colorArray;
+
+    [HideInInspector]
+    public Color[] colorArray;
+
     private int headMeshIndex = 0;
     private int handMeshIndex = 0;
-    private int colorIndex = -1;
+    private int colorIndex = 0;
+
+    void Awake() {
+        m_instance = this;
+    }
 
     void Start() {
         colorArray = new Color[]{
+            Color.white,
             Color.blue,
             Color.cyan,
             Color.green,
@@ -44,27 +55,27 @@ public class MenuController : MonoBehaviour {
     }
 
     public void OnChangColorBlue() {
-        colorIndex = 0;
+        colorIndex = 1;
         OnChangColor(Color.blue);
     }
 
     public void OnChangColorCyan() {
-        colorIndex = 1;
+        colorIndex = 2;
         OnChangColor(Color.cyan);
     }
 
     public void OnChangColorGreen() {
-        colorIndex = 2;
+        colorIndex = 3;
         OnChangColor(Color.green);
     }
 
     public void OnChangColorPurple() {
-        colorIndex = 3;
+        colorIndex = 4;
         OnChangColor(Purple);
     }
 
     public void OnChangColorRed() {
-        colorIndex = 4;
+        colorIndex = 5;
         OnChangColor(Color.red);
     }
 

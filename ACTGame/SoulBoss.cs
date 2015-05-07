@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//Boos设置
+
 public class SoulBoss : MonoBehaviour {
     private Transform player;
     private CharacterController cc;

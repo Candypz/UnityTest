@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//摇杆控制
+
 public class JoyStick : MonoBehaviour {
     private bool m_isPress = false;
     private Transform button;

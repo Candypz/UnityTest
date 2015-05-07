@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//角色动画控制
+
 public class PlayerAnimationAttack : MonoBehaviour {
     private Animator animator;
     private bool isCanAttackB;
@@ -23,7 +25,7 @@ public class PlayerAnimationAttack : MonoBehaviour {
     }
 
     public void OnRedAttackClick() {
-        animator.SetTrigger("AttackA");
+        animator.SetTrigger("AttackGun");
     }
 
     public void AttackBEvent1() {

@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//容器
+
 public class Spawn : MonoBehaviour {
     public GameObject prefab;
 

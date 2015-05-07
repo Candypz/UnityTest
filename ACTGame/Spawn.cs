@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//容器
+/*
+ * 生成怪物的容器
+ */
 
 public class Spawn : MonoBehaviour {
     public GameObject prefab;

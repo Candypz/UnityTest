@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//摇杆控制
+/*
+ * 虚拟按钮的设置
+ */
 
 public class JoyStick : MonoBehaviour {
     private bool m_isPress = false;

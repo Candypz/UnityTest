@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//主角在小地图上的位置
+/*
+ * player在MiniMap中的位置
+ */
 
 public class PlayerIcon : MonoBehaviour {
     private Transform playerIcon;

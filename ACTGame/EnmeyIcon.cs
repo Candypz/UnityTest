@@ -1,6 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ *  MiniMap 怪物图标创建
+ * 
+ */
+
 public class EnmeyIcon : MonoBehaviour {
     private Transform icon;
     private Transform player;

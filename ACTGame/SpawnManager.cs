@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
-//怪物boss生成器
+/*
+ * 怪物boss生成器
+ */
 
 public class SpawnManager : MonoBehaviour {
     public Spawn[] monsterSpawn;

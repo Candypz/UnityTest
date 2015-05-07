@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//角色动画控制
+/*
+ * 角色攻击动画控制
+ */
 
 public class PlayerAnimationAttack : MonoBehaviour {
     private Animator animator;
@@ -48,10 +50,5 @@ public class PlayerAnimationAttack : MonoBehaviour {
         GameObject redAttack = GameObject.Find("RedAttack");
         redAttack.GetComponent<UIButton>().onClick.Add(RedAttackEvent);
         redAttack.SetActive(false);
-    }
-
-    // Update is called once per frame
-    void Update() {
-
     }
 }

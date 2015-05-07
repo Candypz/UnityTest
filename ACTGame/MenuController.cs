@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//游戏开始菜单
+/*
+ * 游戏开始菜单，换装
+ */
 
 public class MenuController : MonoBehaviour {
     public static MenuController m_instance;

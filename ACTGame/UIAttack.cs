@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//切换攻击按钮
+/*
+ * UI中的攻击按钮切换
+ */
 
 public class UIAttack : MonoBehaviour {
     public GameObject normalAttack;

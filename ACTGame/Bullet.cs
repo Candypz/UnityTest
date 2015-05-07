@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ * 子弹
+ */
+
 public class Bullet : MonoBehaviour {
     public float speed = 10;
     public float attack = 100;

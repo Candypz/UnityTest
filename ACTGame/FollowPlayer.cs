@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//相机跟随角色
+/*
+ * 相机跟随player运动
+ */
 
 public class FollowPlayer : MonoBehaviour {
     public Transform player;

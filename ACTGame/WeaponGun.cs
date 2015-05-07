@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//枪的攻击
+/*
+ * 枪的攻击
+ */
 
 public class WeaponGun : MonoBehaviour {
     public Transform bulletPos;

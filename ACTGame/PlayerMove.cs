@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//角色移动
+/*
+ * 角色移动
+ */
 
 public class PlayerMove : MonoBehaviour {
     private CharacterController cc;

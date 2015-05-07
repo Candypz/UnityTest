@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ * 剑痕特效的设置
+ */
+
 public class BuildTrail : MonoBehaviour {
 
     public WeaponTrail myTrail;

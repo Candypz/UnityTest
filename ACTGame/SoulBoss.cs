@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//Boos设置
+/*
+ * Boss的设置，朝着player运动，判断是否在攻击范围内，是否攻击
+ */
 
 public class SoulBoss : MonoBehaviour {
     private Transform player;

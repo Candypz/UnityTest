@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//怪物攻击
+/*
+ * 怪物攻击
+ */
 
 public class SoulMonsterATKAndDamage : ATKAndDamage {
     private Transform player;

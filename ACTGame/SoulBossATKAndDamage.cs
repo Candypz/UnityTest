@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//Boss攻击
+/*
+ * Boss的攻击
+ */
 
 public class SoulBossATKAndDamage : ATKAndDamage {
     private Transform player;

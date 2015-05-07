@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//拾取奖励物品
-
+/*
+ * 角色拾取奖励物品
+ */
 
 public class PlayerAward : MonoBehaviour {
     public GameObject singleSword;//单刃剑

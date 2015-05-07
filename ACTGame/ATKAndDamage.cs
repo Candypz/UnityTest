@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//攻击接口
+/*
+ * 攻击接口player，怪物的基类
+ * 
+ */
 
 public class ATKAndDamage : MonoBehaviour {
     public float hp = 100;

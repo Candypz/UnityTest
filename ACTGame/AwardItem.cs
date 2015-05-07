@@ -31,7 +31,7 @@ public class AwardItem : MonoBehaviour {
     }
 
     public void OnCollisionEnter(Collision collision) {
-        if (collision.collider.tag == "Ground") {
+        if (collision.collider.tag == "Ground") {//如果落地停止运动
             rigidbody.useGravity = false;
             rigidbody.isKinematic = true;
             SphereCollider col = this.GetComponent<SphereCollider>();
@@ -41,7 +41,7 @@ public class AwardItem : MonoBehaviour {
     }
 
     public void OnTriggerEnter(Collider other) {
-        if (other.tag == "Player") {
+        if (other.tag == "Player") {//与主角接触
             startMove = true;
             player = other.transform;
         }

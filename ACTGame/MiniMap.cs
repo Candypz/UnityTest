@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//小地图
+/*
+ * 小地图
+ */
 
 public class MiniMap : MonoBehaviour {
     public static MiniMap m_instance;

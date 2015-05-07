@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ * 角色获取菜单中的换装设置
+ */
 public class PlayerDress : MonoBehaviour {
     public SkinnedMeshRenderer headRender;
     public SkinnedMeshRenderer handRender;

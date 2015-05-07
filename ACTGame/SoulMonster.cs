@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//怪物设置
+/*
+ * 怪物设置
+ */
 
 public class SoulMonster : MonoBehaviour {
     private Transform player;

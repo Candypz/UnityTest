@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
-//角色攻击
+/*
+ * 角色攻击
+ */
 
 public class PlayerATKAndDamage : ATKAndDamage {
     public float attackB = 70;

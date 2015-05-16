@@ -14,7 +14,7 @@ public class PlayerMove : MonoBehaviour {
     private CharacterController controller;
 
     // Use this for initialization
-    void Start() {
+     void Start() {
         controller = gameObject.GetComponent<CharacterController>();
         dir = gameObject.GetComponent<PlayerDir>();
     }

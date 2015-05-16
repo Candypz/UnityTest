@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BarNPC : MonoBehaviour {
+public class BarNPC : NPC {
     public TweenPosition tweenQuest;
     public bool isQuest = false;
     public int killMonster = 0;
@@ -12,13 +12,28 @@ public class BarNPC : MonoBehaviour {
     public GameObject cancelButton;
 
     private PlayerStatus playerStatus;
+    private GameObject player;
+    private float distance;
+    private bool onQuestPanel = false;
 
     void Start() {
         playerStatus = GameObject.FindGameObjectWithTag(Tags.player).GetComponent<PlayerStatus>();
     }
 
+    void Update() {
+        PlayerDistance();
+    }
+
+    public void PlayerDistance() {
+        player = GameObject.Find("Player");
+        distance = Vector3.Distance(player.transform.position, transform.position);
+        if (distance > 5f && onQuestPanel) {
+            HideQuest();
+        }
+    }
+
     void OnMouseOver() {//当鼠标位于这个之上每帧都会调用
-        if (Input.GetMouseButtonDown(0)) {
+        if (Input.GetMouseButtonDown(0) && distance < 4f && onQuestPanel != true) {
             if (isQuest) {
                 ShowTaskProgress();
             }
@@ -35,8 +50,10 @@ public class BarNPC : MonoBehaviour {
     }
 
     void HideQuest() {
-        tweenQuest.PlayReverse();
+        onQuestPanel = false;
         tweenQuest.gameObject.SetActive(false);
+        //tweenQuest.PlayReverse();
+        //StartCoroutine(WaitPlayAnimation());
     }
 
     public void OnButtonCloset() {
@@ -44,6 +61,7 @@ public class BarNPC : MonoBehaviour {
     }
 
     void ShowTaskDes() {//显示任务描述
+        onQuestPanel = true;
         questLabel.text = "任务：\n杀死10只怪\n\n奖励：\n1000金币";
         okButton.SetActive(false);
         acceptButton.SetActive(true);
@@ -51,6 +69,7 @@ public class BarNPC : MonoBehaviour {
     }
 
     void ShowTaskProgress() {//显示任务进度
+        onQuestPanel = true;
         questLabel.text = "任务：\n你已经杀死了" + killMonster + "\\10只怪\n\n奖励：\n1000金币";
         okButton.SetActive(true);
         acceptButton.SetActive(false);
@@ -63,7 +82,7 @@ public class BarNPC : MonoBehaviour {
     }
 
     public void OnButtonOK() {
-        if(killMonster>=10){
+        if (killMonster >= 10) {
             playerStatus.GetCoint(1000);
             killMonster = 0;
             ShowTaskDes();
@@ -76,4 +95,10 @@ public class BarNPC : MonoBehaviour {
     public void OnButtonCancel() {
         HideQuest();
     }
+
+//     IEnumerator WaitPlayAnimation() {//等待UI关闭的动画播放
+//         yield return new WaitForSeconds(2f);
+//         tweenQuest.gameObject.SetActive(false);
+//         onQuestPanel = false;
+//     }
 }

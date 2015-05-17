@@ -37,7 +37,7 @@ public class InventoryItemGrid : UIDragDropItem {
                     this.transform.parent = surface.transform;
                     ResetPosition();
                     InventoryItem newParent = surface.GetComponent<InventoryItem>();
-                    newParent.SetId(oldParent.id,oldParent.num);
+                    newParent.SetId(oldParent.id, oldParent.num);
 
                     oldParent.ClearInfo();
 
@@ -50,6 +50,9 @@ public class InventoryItemGrid : UIDragDropItem {
                 int id = grid1.id; int num = grid1.num;
                 grid1.SetId(grid2.id, grid2.num);
                 grid2.SetId(id, num);
+            }
+            else if(surface.tag==Tags.shortCut){//拖到了快捷方式里面
+                surface.GetComponent<ShortCut>().SetInventory(id);
             }
             else {//拖到inventory上
                 ResetPosition();
@@ -70,7 +73,7 @@ public class InventoryItemGrid : UIDragDropItem {
         sprite.spriteName = info.icon_name;
     }
 
-    public void SetIconName(int id,string icon_name) {
+    public void SetIconName(int id, string icon_name) {
         sprite.spriteName = icon_name;
         this.id = id;
     }

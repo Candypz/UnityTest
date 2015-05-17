@@ -95,4 +95,22 @@ public class Inventory : MonoBehaviour {
         return false;
     }
 
+    //使用物品
+    public bool MinusId(int id, int count = 1) {
+        InventoryItem item = null;
+        foreach (InventoryItem temp in inventoryItem) {
+            if (temp.id == 0) {
+                item = temp;
+                break;
+            }
+        }
+        if (item == null) {
+            return false;
+        }
+        else {
+            bool isSuccess = item.MinusNumber(count);
+            return isSuccess;
+        }
+    }
+
 }

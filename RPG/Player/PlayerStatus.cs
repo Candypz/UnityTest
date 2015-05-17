@@ -44,4 +44,15 @@ public class PlayerStatus : MonoBehaviour {
         }
         return false;
     }
+
+    public void GetDrug(int hp,int mp) {
+        hpRemain += hp;
+        mpRemain += mp;
+        if (hpRemain > this.hp) {
+            hpRemain = this.hp;
+        }
+        if (mpRemain > this.mp) {
+            mpRemain = this.mp;
+        }
+    }
 }

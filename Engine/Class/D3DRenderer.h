@@ -21,6 +21,12 @@ struct stD3DStaticBuffer {
 
 };
 
+struct stD3DTexture {
+    char *fileName;
+    int width, height;
+    LPDIRECT3DTEXTURE9 image;
+};
+
 //d3d渲染器
 
 class D3DRenderer :public RenderInterface {
@@ -51,6 +57,23 @@ public:
     void setLight(stLight *light, int index);
 
     void disableLight(int index);
+
+
+    void setTranspency(RenderState state, TransState src, TransState dst);
+
+    int addTexture2D(char *file, int *texId);
+
+    void setTextureFilter(int index, int filter, int val);
+
+    void setMultiTexture();
+
+    void applyTexture(int index, int texId);
+
+    void saveScreenShot(char *file);
+
+    void enablePointSprites(float size, float min, float a, float b, float c);
+
+    void disablePointSprites();
 private:
     void oneTimeInit();
 
@@ -63,6 +86,9 @@ private:
     stD3DStaticBuffer *m_staticBufferList;//静态缓存
     int m_numStaticBuffers;//静态缓存大小
     int m_activeStaticBuffer;//当前正在使用的
+
+    stD3DTexture *m_textureList;
+    unsigned int m_numTextures;
 };
 
 bool createD3DRenderer(RenderInterface **pRender);

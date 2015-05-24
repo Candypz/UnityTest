@@ -1,5 +1,9 @@
 #include "D3DRenderer.h"
 
+inline unsigned long ftoDw(float v) {
+    return *((unsigned long*)&v);
+}
+
 bool createD3DRenderer(RenderInterface **pRender) {
     if (!*pRender) {
         *pRender = new D3DRenderer();
@@ -23,6 +27,9 @@ D3DRenderer::D3DRenderer() {
     m_numStaticBuffers = 0;
     m_activeStaticBuffer = DEFINES_INVALID;
     m_staticBufferList = NULL;
+
+    m_textureList = NULL;
+    m_numTextures = 0;
 }
 
 D3DRenderer::~D3DRenderer() {
@@ -279,6 +286,23 @@ void D3DRenderer::shutDown() {
         delete[] m_staticBufferList;
         m_staticBufferList = NULL;
     }
+
+    for (unsigned int i = 0; i < m_numTextures; ++i) {
+        if (m_textureList[i].fileName) {
+            delete[]m_textureList[i].fileName;
+            m_textureList[i].fileName = NULL;
+        }
+        if (m_textureList[i].image) {
+            m_textureList[i].image->Release();
+            m_textureList[i].image = NULL;
+        }
+    }
+    m_numTextures = 0;
+    if (m_textureList) {
+        delete[] m_textureList;
+        m_textureList = NULL;
+    }
+
     if (m_device) {
         m_device->Release();
         m_device = NULL;
@@ -318,81 +342,81 @@ int D3DRenderer::endRendering(int staticId) {
     }
     if (m_staticBufferList[staticId].ibPtr != NULL) {
         switch (m_staticBufferList[staticId].primType) {
-        case POINT_LIST:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_POINTLIST, 0, m_staticBufferList[staticId].nubVerts))) {
+            case POINT_LIST:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_POINTLIST, 0, m_staticBufferList[staticId].nubVerts))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  TRIANGLE_LIST:
+                if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, m_staticBufferList[staticId].nubVerts / 3, 0, m_staticBufferList[staticId].numIndices))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  TRIANGLE_STRIP:
+                if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, m_staticBufferList[staticId].nubVerts / 2, 0, m_staticBufferList[staticId].numIndices))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  TRIANGLE_FAN:
+                if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, 0, 0, m_staticBufferList[staticId].nubVerts / 2, 0, m_staticBufferList[staticId].numIndices))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  LINE_LIST:
+                if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, m_staticBufferList[staticId].nubVerts / 2, 0, m_staticBufferList[staticId].numIndices))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  LINE_STRIP:
+                if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_LINESTRIP, 0, 0, m_staticBufferList[staticId].nubVerts, 0, m_staticBufferList[staticId].numIndices))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            default:
                 return DEFINES_FAIL;
-            }
-            break;
-        case  TRIANGLE_LIST:
-            if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, m_staticBufferList[staticId].nubVerts / 3, 0, m_staticBufferList[staticId].numIndices))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  TRIANGLE_STRIP:
-            if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, m_staticBufferList[staticId].nubVerts / 2, 0, m_staticBufferList[staticId].numIndices))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  TRIANGLE_FAN:
-            if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, 0, 0, m_staticBufferList[staticId].nubVerts / 2, 0, m_staticBufferList[staticId].numIndices))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  LINE_LIST:
-            if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, m_staticBufferList[staticId].nubVerts / 2, 0, m_staticBufferList[staticId].numIndices))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  LINE_STRIP:
-            if (FAILED(m_device->DrawIndexedPrimitive(D3DPT_LINESTRIP, 0, 0, m_staticBufferList[staticId].nubVerts, 0, m_staticBufferList[staticId].numIndices))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        default:
-            return DEFINES_FAIL;
         }
     }
     else {
         switch (m_staticBufferList[staticId].primType) {
-        case POINT_LIST:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_POINTLIST, 0, m_staticBufferList[staticId].nubVerts))) {
+            case POINT_LIST:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_POINTLIST, 0, m_staticBufferList[staticId].nubVerts))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  TRIANGLE_LIST:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, (int)(m_staticBufferList[staticId].nubVerts) / 3))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  TRIANGLE_STRIP:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, (int)(m_staticBufferList[staticId].nubVerts) / 2))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  TRIANGLE_FAN:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, (int)(m_staticBufferList[staticId].nubVerts) / 2))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  LINE_LIST:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_LINELIST, 0, (int)(m_staticBufferList[staticId].nubVerts) / 2))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            case  LINE_STRIP:
+                if (FAILED(m_device->DrawPrimitive(D3DPT_LINESTRIP, 0, (int)(m_staticBufferList[staticId].nubVerts)))) {
+                    return DEFINES_FAIL;
+                }
+                break;
+            default:
                 return DEFINES_FAIL;
-            }
-            break;
-        case  TRIANGLE_LIST:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, (int)(m_staticBufferList[staticId].nubVerts) / 3))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  TRIANGLE_STRIP:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, (int)(m_staticBufferList[staticId].nubVerts) / 2))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  TRIANGLE_FAN:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, (int)(m_staticBufferList[staticId].nubVerts) / 2))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  LINE_LIST:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_LINELIST, 0, (int)(m_staticBufferList[staticId].nubVerts) / 2))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        case  LINE_STRIP:
-            if (FAILED(m_device->DrawPrimitive(D3DPT_LINESTRIP, 0, (int)(m_staticBufferList[staticId].nubVerts)))) {
-                return DEFINES_FAIL;
-            }
-            break;
-        default:
-            return DEFINES_FAIL;
         }
     }
     return DEFINES_OK;
 }
 
 void D3DRenderer::setMaterial(stMaterial *material) {
-    if (!material||!m_device) {
+    if (!material || !m_device) {
         return;
     }
     D3DMATERIAL9 d3dMaterial = {
@@ -403,8 +427,8 @@ void D3DRenderer::setMaterial(stMaterial *material) {
         material->power
     };
     m_device->SetMaterial(&d3dMaterial);
-}   
-    
+}
+
 void D3DRenderer::setLight(stLight *light, int index) {
     if (!light || !m_device || index < 0) {
         return;
@@ -437,7 +461,7 @@ void D3DRenderer::setLight(stLight *light, int index) {
     d3dLight.Position.z = light->posZ;
 
     d3dLight.Range = light->range;
-    
+
     d3dLight.Specular.a = light->specularA;
     d3dLight.Specular.r = light->specularR;
     d3dLight.Specular.g = light->specularG;
@@ -450,16 +474,259 @@ void D3DRenderer::setLight(stLight *light, int index) {
     else if (light->type == LIGHT_SPOT) {
         d3dLight.Type = D3DLIGHT_SPOT;
     }
-    else if(light->type==LIGHT_DIRECTIONAL){
+    else if (light->type == LIGHT_DIRECTIONAL) {
         d3dLight.Type = D3DLIGHT_DIRECTIONAL;
     }
     m_device->SetLight(index, &d3dLight);
     m_device->LightEnable(index, TRUE);
-}   
-    
+}
+
 void D3DRenderer::disableLight(int index) {
     if (!m_device) {
         return;
     }
-    m_device->LightEnable(index,FALSE);
+    m_device->LightEnable(index, FALSE);
+}
+
+void D3DRenderer::setTranspency(RenderState state, TransState src, TransState dst) {
+    if (!m_device) {
+        return;
+    }
+    if (state == TRANSARENCY_NONE) {
+        m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);//关闭不透明度
+        return;
+    }
+    if (state == TRANSARENCY_ENABLE) {
+        m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);//开启
+        switch (src) {//原融合因子
+            case TRANS_ZERO:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
+                break;
+            case TRANS_ONE:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+                break;
+            case TRANS_SRCCOLOR:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCCOLOR);
+                break;
+            case TRANS_INVSRCCOLOR:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_INVSRCCOLOR);
+                break;
+            case TRANS_SRCALPHA:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                break;
+            case TRANS_INVSRCALPHA:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_INVSRCALPHA);
+                break;
+            case  TRANS_DSTALPHA:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_DESTALPHA);
+                break;
+            case   TRANS_INVDSTCOLOR:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_INVDESTCOLOR);
+                break;
+            case  TRANS_SRCALPHASAT:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHASAT);
+                break;
+            case  TRANS_BOTHSRCALPHA:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_BOTHSRCALPHA);
+                break;
+            case   TRANS_INVBOTHSRCALPHA:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_BOTHINVSRCALPHA);
+                break;
+            case  TRANS_BLENDFACTOR:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_BLENDFACTOR);
+                break;
+            case  TRANS_INVBLENDFACTOR:
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_INVBLENDFACTOR);
+                break;
+            default:
+                m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);//关闭
+                return;
+                break;
+        }
+
+        switch (dst) {//目标融合因子
+            case TRANS_ZERO:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ZERO);
+                break;
+            case TRANS_ONE:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+                break;
+            case TRANS_SRCCOLOR:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
+                break;
+            case TRANS_INVSRCCOLOR:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
+                break;
+            case TRANS_SRCALPHA:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCALPHA);
+                break;
+            case TRANS_INVSRCALPHA:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+                break;
+            case  TRANS_DSTALPHA:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_DESTALPHA);
+                break;
+            case   TRANS_INVDSTCOLOR:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVDESTCOLOR);
+                break;
+            case  TRANS_SRCALPHASAT:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCALPHASAT);
+                break;
+            case  TRANS_BOTHSRCALPHA:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_BOTHSRCALPHA);
+                break;
+            case   TRANS_INVBOTHSRCALPHA:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_BOTHINVSRCALPHA);
+                break;
+            case  TRANS_BLENDFACTOR:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_BLENDFACTOR);
+                break;
+            case  TRANS_INVBLENDFACTOR:
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVBLENDFACTOR);
+                break;
+            default:
+                m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);//关闭
+                return;
+                break;
+        }
+    }
+}
+
+int  D3DRenderer::addTexture2D(char *file, int *texId) {
+    if (!file || !m_device) {
+        return DEFINES_FAIL;
+    }
+
+    int len = strlen(file);
+    if (!len) {
+        return DEFINES_FAIL;
+    }
+
+    int index = m_numTextures;
+    if (!m_textureList) {
+        m_textureList = new stD3DTexture[1];
+        if (!m_textureList) {
+            return DEFINES_FAIL;
+        }
+    }
+    else {
+        stD3DTexture *temp;
+        temp = new stD3DTexture[m_numTextures + 1];
+        memcpy(temp, m_textureList, sizeof(stD3DTexture)*m_numTextures);
+        delete[]m_textureList;
+        m_textureList = temp;
+    }
+    m_textureList[index].fileName = new char[len];
+    memcpy(m_textureList[index].fileName, file, len);
+
+    D3DCOLOR colorkey = 0xff000000;
+    D3DXIMAGE_INFO info;
+
+    if (D3DXCreateTextureFromFileEx(m_device, file, 0, 0, 0, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, D3DX_DEFAULT, D3DX_DEFAULT, colorkey, &info, NULL, &m_textureList[index].image) != D3D_OK) {
+        return DEFINES_FAIL;
+    }
+    m_textureList[index].width = info.Width;
+    m_textureList[index].height = info.Height;
+
+    *texId = m_numTextures;
+    m_numTextures++;
+
+    return DEFINES_OK;
+}
+
+void D3DRenderer::setTextureFilter(int index, int filter, int val) {
+    if (!m_device || index < 0) {
+        return;
+    }
+    D3DSAMPLERSTATETYPE fil = D3DSAMP_MINFILTER;
+    int v = D3DTEXF_POINT;//过滤器类型
+
+    if (filter == MIN_FILTER) {
+        fil = D3DSAMP_MINFILTER;
+    }
+    if (filter == MAG_FILTER) {
+        fil = D3DSAMP_MAGFILTER;
+    }
+    if (filter == MIP_FILTER) {
+        fil = D3DSAMP_MIPFILTER;
+    }
+
+
+    if (val == POINT_TYPE) {
+        v = D3DTEXF_POINT;
+    }
+    if (val == LINEAR_TYPE) {
+        v = D3DTEXF_LINEAR;
+    }
+    if (val == ANISOTROPIC_TYPE) {
+        v = D3DTEXF_ANISOTROPIC;
+    }
+    //采样索引 过滤器 过滤器类型
+    m_device->SetSamplerState(index, fil, v);
+}
+
+void D3DRenderer::setMultiTexture() {
+    if (!m_device) {
+        return;
+    }
+    m_device->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+    m_device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);//颜色相乘
+    m_device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);//纹理颜色
+    m_device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);//漫反射颜色
+
+    m_device->SetTextureStageState(1, D3DTSS_TEXCOORDINDEX, 1);
+    m_device->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_MODULATE);//颜色相乘
+    m_device->SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);//纹理颜色
+    m_device->SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);//上一个的结果
+
+}
+
+void D3DRenderer::applyTexture(int index, int texId) {
+    if (!m_device) {
+        return;
+    }
+    if (index < 0 || texId < 0) {
+        m_device->SetTexture(0, NULL);
+    }
+    else {
+        m_device->SetTexture(index, m_textureList[texId].image);
+    }
+}
+
+void D3DRenderer::saveScreenShot(char *file) {
+    if (!file) {
+        return;
+    }
+
+    LPDIRECT3DSURFACE9 surface = NULL;
+    D3DDISPLAYMODE disp;
+
+    m_device->GetDisplayMode(0, &disp);
+    m_device->CreateOffscreenPlainSurface(disp.Width, disp.Height, D3DFMT_A8B8G8R8, D3DPOOL_DEFAULT, &surface, NULL);
+    m_device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &surface);
+    D3DXSaveSurfaceToFile(file, D3DXIFF_JPG, surface, NULL, NULL);
+
+    if (surface != NULL) {
+        surface->Release();
+    }
+    surface = NULL;
+}
+
+void D3DRenderer::enablePointSprites(float size, float min, float a, float b, float c) {
+    if (!m_device) {
+        return;
+    }
+    m_device->SetRenderState(D3DRS_POINTSPRITEENABLE, TRUE);//激活点精灵
+    m_device->SetRenderState(D3DRS_POINTSCALEENABLE, TRUE);
+    m_device->SetRenderState(D3DRS_POINTSIZE, ftoDw(size));
+    m_device->SetRenderState(D3DRS_POINTSIZE_MIN, ftoDw(min));
+    m_device->SetRenderState(D3DRS_POINTSCALE_A, ftoDw(a));
+    m_device->SetRenderState(D3DRS_POINTSCALE_B, ftoDw(b));
+    m_device->SetRenderState(D3DRS_POINTSCALE_C, ftoDw(c));
+}
+
+void D3DRenderer::disablePointSprites() {
+    m_device->SetRenderState(D3DRS_POINTSPRITEENABLE, FALSE);
+    m_device->SetRenderState(D3DRS_POINTSCALEENABLE, FALSE);
+
 }

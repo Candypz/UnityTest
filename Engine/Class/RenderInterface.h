@@ -38,6 +38,28 @@ public:
     //关闭光源
     virtual void disableLight(int index) = 0;
 
+    //透视矩阵
+    virtual void calculateProjMatrix(float fov, float n, float far) = 0;
+    //正交矩阵
+    virtual void calculateOrthoMatrix(float n, float f) = 0;
+
+    //设置透明度 渲染状态，原，目标
+    virtual void setTranspency(RenderState state,TransState src,TransState dst) = 0;
+    //添加纹理 文件名，纹理指针
+    virtual int addTexture2D(char *file, int *texId) = 0;
+    //设置过滤器 索引，多虑器，过滤器类型
+    virtual void setTextureFilter(int index, int filter, int val) = 0;
+    //设置多重纹理
+    virtual void setMultiTexture() = 0;
+    //应用纹理 索引，指定的纹理
+    virtual void applyTexture(int index, int texId) = 0;
+    //保存截屏
+    virtual void saveScreenShot(char *file) = 0;
+    //激活点精灵
+    virtual void enablePointSprites(float size, float min, float a, float b, float c) = 0;
+    //停用点精灵
+    virtual void disablePointSprites() = 0;
+
 protected:
     int m_screenWidth;
     int m_screenHeight;

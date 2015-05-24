@@ -9,7 +9,7 @@
 #pragma comment(lib,"d3dx9.lib")
 
 struct stD3DStaticBuffer {
-    stD3DStaticBuffer() :vbPtr(0),ibPtr(0),nubVerts(0),numIndices(0),stride(0),fvf(0),primType(NULL_TYPE) {}
+    stD3DStaticBuffer() :vbPtr(0), ibPtr(0), nubVerts(0), numIndices(0), stride(0), fvf(0), primType(NULL_TYPE) {}
 
     LPDIRECT3DVERTEXBUFFER9 vbPtr;//¶¥µã
     LPDIRECT3DINDEXBUFFER9 ibPtr;//¶¥µãË÷Òý
@@ -23,19 +23,19 @@ struct stD3DStaticBuffer {
 
 //d3däÖÈ¾Æ÷
 
-class D3DRenderer :public RenderInterface{
+class D3DRenderer :public RenderInterface {
 public:
     D3DRenderer();
     ~D3DRenderer();
 
-    bool initialize(int w, int h, WinHWND hWnd,bool full);
+    bool initialize(int w, int h, WinHWND hWnd, bool full);
     //Í¸ÊÓ¾ØÕó
     void calculateProjMatrix(float fov, float n, float far);
     //Õý½»¾ØÕó
     void calculateOrthoMatrix(float n, float f);
     void setClearColor(float r, float g, float b);
 
-    void startRender(bool bColor,bool bDepth,bool bStencil);
+    void startRender(bool bColor, bool bDepth, bool bStencil);
     void endRender();
 
     void shutDown();
@@ -45,7 +45,13 @@ public:
     void clearBuffers(bool bColor, bool bDepth, bool bStencil);
 
     int createStaticBuffer(VertexType vType, PrimType primType, int totalVerts, int totalIndices, int stride, void **data, unsigned int *indices, int *staticId);
-private: 
+
+    void setMaterial(stMaterial *material);
+
+    void setLight(stLight *light, int index);
+
+    void disableLight(int index);
+private:
     void oneTimeInit();
 
 private:

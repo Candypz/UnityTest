@@ -390,3 +390,76 @@ int D3DRenderer::endRendering(int staticId) {
     }
     return DEFINES_OK;
 }
+
+void D3DRenderer::setMaterial(stMaterial *material) {
+    if (!material||!m_device) {
+        return;
+    }
+    D3DMATERIAL9 d3dMaterial = {
+        material->diffuseR, material->diffuseG, material->diffuseB, material->diffuseA,
+        material->ambientR, material->ambientG, material->ambientB, material->ambientA,
+        material->specularR, material->specularG, material->specularB, material->specularA,
+        material->emissiveR, material->emissiveG, material->emissiveB, material->emissiveA,
+        material->power
+    };
+    m_device->SetMaterial(&d3dMaterial);
+}   
+    
+void D3DRenderer::setLight(stLight *light, int index) {
+    if (!light || !m_device || index < 0) {
+        return;
+    }
+    D3DLIGHT9 d3dLight;
+
+    d3dLight.Ambient.a = light->ambientA;
+    d3dLight.Ambient.r = light->ambientR;
+    d3dLight.Ambient.g = light->ambientG;
+    d3dLight.Ambient.b = light->ambientB;
+
+    d3dLight.Attenuation0 = light->attenuation0;
+    d3dLight.Attenuation1 = light->attenuation1;
+    d3dLight.Attenuation2 = light->attenuation2;
+
+    d3dLight.Diffuse.a = light->diffuseA;
+    d3dLight.Diffuse.g = light->diffuseG;
+    d3dLight.Diffuse.b = light->diffuseB;
+    d3dLight.Diffuse.r = light->diffuseR;
+
+    d3dLight.Direction.x = light->dirX;
+    d3dLight.Direction.y = light->dirY;
+    d3dLight.Direction.z = light->dirZ;
+
+    d3dLight.Falloff = light->falloff;
+    d3dLight.Phi = light->phi;
+
+    d3dLight.Position.x = light->posX;
+    d3dLight.Position.y = light->posY;
+    d3dLight.Position.z = light->posZ;
+
+    d3dLight.Range = light->range;
+    
+    d3dLight.Specular.a = light->specularA;
+    d3dLight.Specular.r = light->specularR;
+    d3dLight.Specular.g = light->specularG;
+    d3dLight.Specular.b = light->specularB;
+
+    d3dLight.Theta = light->theta;
+    if (light->type == LIGHT_POINT) {
+        d3dLight.Type = D3DLIGHT_POINT;
+    }
+    else if (light->type == LIGHT_SPOT) {
+        d3dLight.Type = D3DLIGHT_SPOT;
+    }
+    else if(light->type==LIGHT_DIRECTIONAL){
+        d3dLight.Type = D3DLIGHT_DIRECTIONAL;
+    }
+    m_device->SetLight(index, &d3dLight);
+    m_device->LightEnable(index, TRUE);
+}   
+    
+void D3DRenderer::disableLight(int index) {
+    if (!m_device) {
+        return;
+    }
+    m_device->LightEnable(index,FALSE);
+}

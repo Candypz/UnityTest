@@ -3,6 +3,7 @@
 #include "Defines.h"
 
 
+
 //渲染接口
 
 class RenderInterface {
@@ -30,6 +31,12 @@ public:
         int stride, void **data, unsigned int *indices, int *staticId) = 0;
     //渲染
     virtual int endRendering(int staticId) = 0;
+    //设置材质
+    virtual void setMaterial(stMaterial *material) = 0;
+    //设置光源
+    virtual void setLight(stLight *light, int index) = 0;
+    //关闭光源
+    virtual void disableLight(int index) = 0;
 
 protected:
     int m_screenWidth;

@@ -14,9 +14,44 @@ bool createD3DRenderer(RenderInterface **pRender) {
     return true;
 }
 
+D3DMULTISAMPLE_TYPE getD3DMultiSampleType(LPDIRECT3D9 d3d, MS_TYPE ms, D3DDEVTYPE evType, D3DFORMAT format, bool fullscreen) {
+    D3DMULTISAMPLE_TYPE type = D3DMULTISAMPLE_NONE;
+    if (d3d) {
+        switch (ms) {
+            case  MS_NONE:
+                type = D3DMULTISAMPLE_NONE;
+                break;
+            case MS_SAMPLES_2:
+                if (d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, evType, format, !fullscreen, D3DMULTISAMPLE_2_SAMPLES, NULL) == D3D_OK) {
+                    type = D3DMULTISAMPLE_2_SAMPLES;
+                }
+                break;
+            case MS_SAMPLES_4:
+                if (d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, evType, format, !fullscreen, D3DMULTISAMPLE_4_SAMPLES, NULL) == D3D_OK) {
+                    type = D3DMULTISAMPLE_4_SAMPLES;
+                }
+                break;
+            case MS_SAMPLES_8:
+                if (d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, evType, format, !fullscreen, D3DMULTISAMPLE_8_SAMPLES, NULL) == D3D_OK) {
+                    type = D3DMULTISAMPLE_8_SAMPLES;
+                }
+                break;
+            case MS_SAMPLES_16:
+                if (d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, evType, format, !fullscreen, D3DMULTISAMPLE_16_SAMPLES, NULL) == D3D_OK) {
+                    type = D3DMULTISAMPLE_16_SAMPLES;
+                }
+                break;
+        }
+    }
+    return type;
+}
+
 //根据顶点类型创建不通的fvf
 unsigned long createD3DFvf(int flags) {
     unsigned long fvf = 0;
+    if (flags == GUI_FVF) {
+        fvf = D3DFVF_GUI;
+    }
     return fvf;
 }
 
@@ -30,13 +65,19 @@ D3DRenderer::D3DRenderer() {
 
     m_textureList = NULL;
     m_numTextures = 0;
+
+    m_fonts = NULL;
+    m_totlFonts = 0;
+
+    m_guiList = NULL;
+    m_totalGUIs = 0;
 }
 
 D3DRenderer::~D3DRenderer() {
     shutDown();
 }
 
-bool D3DRenderer::initialize(int w, int h, WinHWND hWnd, bool full) {
+bool D3DRenderer::initialize(int w, int h, WinHWND hWnd, bool full,MS_TYPE ms) {
     //重新开始时关闭
     shutDown();
 
@@ -94,6 +135,7 @@ bool D3DRenderer::initialize(int w, int h, WinHWND hWnd, bool full) {
     params.BackBufferCount = 1;
     params.EnableAutoDepthStencil = TRUE;
     params.AutoDepthStencilFormat = D3DFMT_D16;//格式
+    params.MultiSampleType = getD3DMultiSampleType(m_direct3D, ms, D3DDEVTYPE_HAL, mode.Format, m_fullscreen);
 
     m_screenWidth = w;
     m_screenHeight = h;
@@ -287,6 +329,27 @@ void D3DRenderer::shutDown() {
         m_staticBufferList = NULL;
     }
 
+    for (int i = 0; i < m_totalGUIs; ++i) {
+        m_guiList[i].shutDown();
+    }
+    m_totalGUIs = 0;
+    if (m_guiList) {
+        delete[]m_guiList;
+        m_guiList = NULL;
+    }
+
+    for (int i = 0; i < m_totlFonts; ++i) {
+        if (m_fonts[i]) {
+            m_fonts[i]->Release();
+            m_fonts[i] = NULL;
+        }
+    }
+    m_totlFonts = 0;
+    if (m_fonts) {
+        delete[] m_fonts;
+        m_fonts = NULL;
+    }
+
     for (unsigned int i = 0; i < m_numTextures; ++i) {
         if (m_textureList[i].fileName) {
             delete[]m_textureList[i].fileName;
@@ -374,6 +437,7 @@ int D3DRenderer::endRendering(int staticId) {
                 break;
             default:
                 return DEFINES_FAIL;
+                break;
         }
     }
     else {
@@ -410,6 +474,7 @@ int D3DRenderer::endRendering(int staticId) {
                 break;
             default:
                 return DEFINES_FAIL;
+                break;
         }
     }
     return DEFINES_OK;
@@ -729,4 +794,268 @@ void D3DRenderer::disablePointSprites() {
     m_device->SetRenderState(D3DRS_POINTSPRITEENABLE, FALSE);
     m_device->SetRenderState(D3DRS_POINTSCALEENABLE, FALSE);
 
+}
+
+void D3DRenderer::setNormalmap(int index, int texId) {
+    if (!m_device) {
+        return;
+    }
+    if (index < 0 || texId < 0) {
+        m_device->SetTexture(0, NULL);
+    }
+    else {
+        D3DSURFACE_DESC desc;
+        LPDIRECT3DTEXTURE9 normalTexture;
+        m_textureList[texId].image->GetLevelDesc(0, &desc);
+        if (D3DXCreateTexture(m_device, desc.Width, desc.Height, 0, 0, D3DFMT_A8B8G8R8, D3DPOOL_MANAGED, &normalTexture) != D3D_OK) {
+            return;
+        }
+        if (D3DXComputeNormalMap(normalTexture, m_textureList[texId].image, 0, D3DX_NORMALMAP_MIRROR, D3DX_CHANNEL_GREEN, 10) != D3D_OK) {
+            return;
+        }
+        m_device->SetTexture(index, normalTexture);
+        if (normalTexture) {
+            normalTexture->Release();
+            normalTexture = NULL;
+        }
+    }
+}
+
+bool D3DRenderer::addGUIBackdrop(int guiID, char *fileName) {
+    if (guiID >= m_totalGUIs) {
+        return false;
+    }
+    int texID = -1;
+    int staticID = -1;
+
+    if (!addTexture2D(fileName, &texID)) {
+        return false;
+    }
+
+    unsigned long color = D3DCOLOR_XRGB(255, 255, 255);
+
+    stGUIVerter obj[] = {
+        { (float)m_screenWidth, 0, 0, 1, color, 1, 0 },
+        { (float)m_screenWidth, (float)m_screenHeight, 0, 1, color, 1, 1 },
+        { 0, 0, 0, 1, color, 0, 0 },
+        { 0, (float)m_screenHeight, 0, 1, color, 0, 1 },
+    };
+
+    if (!createStaticBuffer(GUI_FVF, TRIANGLE_STRIP, 4, 0, sizeof(stGUIVerter), (void**)&obj, NULL, &staticID)) {
+        return false;
+    }
+
+    return m_guiList[guiID].addBackDrop(texID, staticID);
+}
+
+bool D3DRenderer::addGUIStaticText(int guiID, int id, char *text, int x, int y, unsigned long color, int fontID) {
+    if (guiID >= m_totalGUIs) {
+        return false;
+    }
+
+    return m_guiList[guiID].addStaticText(id, text, x, y, color, fontID);
+}
+
+bool D3DRenderer::addGUIButton(int guiID, int id, int x, int y, char *up, char *over, char *down) {
+    if (guiID >= m_totalGUIs) {
+        return false;
+    }
+
+    int upID = -1, downID = -1, overID = -1, staticID = -1;
+
+    if (!addTexture2D(up, &upID)) {
+        return false;
+    }
+    if (!addTexture2D(over, &overID)) {
+        return false;
+    }
+    if (!addTexture2D(down, &downID)) {
+        return false;
+    }
+
+    unsigned long color = D3DCOLOR_XRGB(255, 255, 255);
+
+    int w = m_textureList[upID].width;
+    int h = m_textureList[upID].height;
+
+    stGUIVerter obj[] = {
+        { (float)(w + x), (float)(0 + y), 0, 1, color, 1, 0 },
+        { (float)(w + x), (float)(h + y), 0, 1, color, 1, 1 },
+        { (float)(0 + x), (float)(0 + y), 0, 1, color, 0, 0 },
+        { (float)(0 + x), (float)(h + y), 0, 1, color, 0, 1 },
+    };
+
+    if (!createStaticBuffer(GUI_FVF, TRIANGLE_STRIP, 4, 0, sizeof(stGUIVerter), (void**)&obj, NULL, &staticID)) {
+        return false;
+    }
+
+    return m_guiList[guiID].addButton(id, x, y, w, h, upID, overID, downID, staticID);
+}
+
+void D3DRenderer::processGUI(int guiID, bool LMBDown, int mouseX, int mouseY, void(*funcPtr)(int id, int state)) {
+    if (guiID >= m_totalGUIs || !m_device) {
+        return;
+    }
+
+    GUISystem *gui = &m_guiList[guiID];
+
+    stGUIControl *backDrop = gui->getBackDrop();
+
+    if (backDrop) {
+        applyTexture(0, backDrop->m_upTex);
+        endRendering(backDrop->m_listID);
+        applyTexture(0, -1);
+    }
+
+    int status = GUI_BUTTON_UP;
+
+    for (int i = 0; i < gui->getTotalControls(); ++i) {
+        stGUIControl *pCont = gui->getGUIControl(i);
+        if (!pCont) continue;
+
+        switch (pCont->m_type) {
+            case GUI_STATICTEXT:
+                displayText(pCont->m_listID, pCont->m_x, pCont->m_y, pCont->m_color, pCont->m_text);
+                break;
+            case GUI_BUTTON:
+                status = GUI_BUTTON_UP;
+
+                m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+                m_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+                m_device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVDESTALPHA);
+
+                if (mouseX > pCont->m_x && mouseX < pCont->m_x + pCont->m_width &&
+                    mouseY > pCont->m_y && mouseY < pCont->m_y + pCont->m_height) {
+                    if (LMBDown) {
+                        status = GUI_BUTTON_DOWN;
+                    }
+                    else {
+                        status = GUI_BUTTON_OVER;
+                    }
+                }
+                if (status == GUI_BUTTON_UP) {
+                    applyTexture(0, pCont->m_upTex);
+                }
+                if (status == GUI_BUTTON_OVER) {
+                    applyTexture(0, pCont->m_overTex);
+                }
+                if (status == GUI_BUTTON_DOWN) {
+                    applyTexture(0, pCont->m_downTex);
+                }
+
+                endRendering(pCont->m_listID);
+
+                m_device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+                break;
+        }
+        if (funcPtr) {//调用回掉函数
+            funcPtr(pCont->m_id, status);
+        }
+    }
+}
+
+bool D3DRenderer::createText(char *font, int weight, bool italic, int size, int &id) {
+    if (!m_fonts) {
+        m_fonts = new LPD3DXFONT[1];
+        if (!m_fonts) {
+            return false;
+        }
+    }
+    else {
+        LPD3DXFONT *temp;
+        temp = new LPD3DXFONT[m_totlFonts + 1];
+        memcpy(temp, m_fonts, sizeof(LPD3DXFONT)*m_totlFonts);
+        delete[] m_fonts;
+        m_fonts = temp;
+    }
+    if (FAILED(D3DXCreateFont(m_device, size, 0, weight, 1, italic, 0, 0, 0, 0, font, &m_fonts[m_totlFonts]))) {
+        return false;
+    }
+    id = m_totlFonts;
+    m_totlFonts++;
+
+    return true;
+}
+
+//显示文本信息
+void D3DRenderer::displayText(int id, long x, long y, int r, int g, int b, char *text, ...) {
+    RECT fontPosition = { x, y, m_screenWidth, m_screenHeight };
+    char message[1024];
+    va_list argList;
+    if (id >= m_totlFonts) {
+        return;
+    }
+    va_start(argList, text);
+    vsprintf_s(message, text, argList);
+    va_end(argList);
+
+    m_fonts[id]->DrawText(NULL, message, -1, &fontPosition, DT_SINGLELINE, D3DCOLOR_ARGB(255, r, g, b));
+}
+
+void D3DRenderer::displayText(int id, long x, long y, unsigned long color, char *text, ...) {
+    RECT fontPosition = { x, y, m_screenWidth, m_screenHeight };
+    char message[1024];
+    va_list argList;
+    if (id >= m_totlFonts) {
+        return;
+    }
+    va_start(argList, text);
+    vsprintf_s(message, text, argList);
+    va_end(argList);
+
+    m_fonts[id]->DrawText(NULL, message, -1, &fontPosition, DT_SINGLELINE, color);
+}
+
+void D3DRenderer::enableFog(float start, float end, FOG_TYPE type, unsigned long color, bool rangeFog) {
+    if (!m_device) {
+        return;
+    }
+    D3DCAPS9 caps;
+    m_device->GetDeviceCaps(&caps);
+
+    m_device->SetRenderState(D3DRS_FOGENABLE, TRUE);
+    m_device->SetRenderState(D3DRS_FOGCOLOR, color);
+
+    m_device->SetRenderState(D3DRS_FOGSTART, *(DWORD*)(&start));
+    m_device->SetRenderState(D3DRS_FOGSTART, *(DWORD*)(&end));
+
+    if (type == VERTEX_FOG) {
+        m_device->SetRenderState(D3DRS_FOGVERTEXMODE, D3DFOG_LINEAR);
+    }
+    else {
+        //表格
+        m_device->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_LINEAR);
+    }
+
+    if (caps.RasterCaps&D3DPRASTERCAPS_FOGRANGE) {
+        if (rangeFog) {
+            m_device->SetRenderState(D3DRS_RANGEFOGENABLE, TRUE);
+        }
+        else {
+            m_device->SetRenderState(D3DRS_RANGEFOGENABLE, FALSE);
+        }
+    }
+
+}
+
+void D3DRenderer::disableFog() {
+    if (!m_device) {
+        return;
+    }
+    m_device->SetRenderState(D3DRS_FOGENABLE, FALSE);
+}
+
+void D3DRenderer::setDetailMapping() {
+    if (!m_device) {
+        return;
+    }
+    m_device->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, 0);
+    m_device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+    m_device->SetTextureStageState(0, D3DTSS_COLORARG0, D3DTA_TEXTURE);
+    m_device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+
+    m_device->SetTextureStageState(1, D3DTSS_TEXCOORDINDEX, 1);
+    m_device->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_ADDSIGNED);
+    m_device->SetTextureStageState(1, D3DTSS_COLORARG0, D3DTA_TEXTURE);
+    m_device->SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
 }

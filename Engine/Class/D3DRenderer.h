@@ -4,6 +4,7 @@
 #include "Defines.h"
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <stdio.h>
 
 #pragma comment(lib,"d3d9.lib")
 #pragma comment(lib,"d3dx9.lib")
@@ -25,6 +26,7 @@ struct stD3DTexture {
     char *fileName;
     int width, height;
     LPDIRECT3DTEXTURE9 image;
+    //LPDIRECT3DTEXTURE9 normalTexture;
 };
 
 //d3d‰÷»æ∆˜
@@ -34,9 +36,9 @@ public:
     D3DRenderer();
     ~D3DRenderer();
 
-    bool initialize(int w, int h, WinHWND hWnd, bool full);
+    bool initialize(int w, int h, WinHWND hWnd, bool full,MS_TYPE ms);
     //Õ∏ ”æÿ’Û
-    void calculateProjMatrix(float fov, float n, float far);
+    void calculateProjMatrix(float fov, float n, float f);
     //’˝Ωªæÿ’Û
     void calculateOrthoMatrix(float n, float f);
     void setClearColor(float r, float g, float b);
@@ -67,6 +69,8 @@ public:
 
     void setMultiTexture();
 
+    void setDetailMapping();
+
     void applyTexture(int index, int texId);
 
     void saveScreenShot(char *file);
@@ -74,6 +78,20 @@ public:
     void enablePointSprites(float size, float min, float a, float b, float c);
 
     void disablePointSprites();
+
+    void setNormalmap(int index, int texId);
+
+    void enableFog(float start, float end, FOG_TYPE type, unsigned long color, bool rangeFog);
+    void disableFog();
+
+    /*GUI*/
+    bool createText(char *font, int weight, bool italic, int size, int &id);
+    void displayText(int id, long x, long y, int r, int g, int b, char *text, ...);
+    void displayText(int id, long x, long y, unsigned long color, char *text, ...);
+    bool addGUIBackdrop(int guiID, char *fileName);
+    bool addGUIStaticText(int guiID, int id, char *text, int x, int y, unsigned long color, int fontID);
+    bool addGUIButton(int guiID, int id, int x, int y, char *up, char *over, char *down);
+    void processGUI(int guiID, bool LMBDown, int mouseX, int mouseY, void(*funcPtr)(int id, int state));
 private:
     void oneTimeInit();
 
@@ -82,6 +100,8 @@ private:
     LPDIRECT3D9 m_direct3D;
     LPDIRECT3DDEVICE9 m_device;
     bool m_renderingScene;
+
+    LPD3DXFONT *m_fonts;//◊÷ÃÂ
 
     stD3DStaticBuffer *m_staticBufferList;//æ≤Ã¨ª∫¥Ê
     int m_numStaticBuffers;//æ≤Ã¨ª∫¥Ê¥Û–°

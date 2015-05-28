@@ -27,11 +27,11 @@ class CPlane
       }
       void SetPlaneIntercept(float D) { d = D; }
 
-      bool Intersect(CPlane &p2, CPlane &p3,
+      bool intersect(CPlane &p2, CPlane &p3,
                      CVector3 *intersectPoint);
-      bool Intersect(CPlane &pl, CVector3 *intersectPoint);
-      bool Intersect(CPlane &pl, CRay *intersect);
-      bool Intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3);
+      bool intersect(CPlane &pl, CVector3 *intersectPoint);
+      bool intersect(CPlane &pl, CRay *intersect);
+      bool intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3);
 
       int ClassifyPolygon(CPolygon &pol);
       int ClassifyPoint(CVector3 &v);

@@ -8,6 +8,14 @@ struct stGUIVerter {
     float u, v;
 };
 
+//x模型顶点
+struct stModelVertex {
+    float x, y, z;
+    float nx, ny, nz;//顶点法线坐标
+    unsigned long color;
+    float u, v;
+};
+
 
 
 

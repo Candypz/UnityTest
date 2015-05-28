@@ -15,7 +15,7 @@ public:
     virtual ~RenderInterface() {
     }
 
-    virtual bool initialize(int w, int h, WinHWND hWnd, bool full,MS_TYPE ms) = 0;
+    virtual bool initialize(int w, int h, WinHWND hWnd, bool full, MS_TYPE ms) = 0;
     virtual void oneTimeInit() = 0;
     virtual void setClearColor(float r, float g, float b) = 0;//ÇåÆÁ
 
@@ -78,6 +78,28 @@ public:
     virtual bool createText(char *font, int weight, bool italic, int size, int &id) = 0;
     virtual void displayText(int id, long x, long y, int r, int g, int b, char *text, ...) = 0;
     virtual void displayText(int id, long x, long y, unsigned long color, char *text, ...) = 0;
+
+    /*XÄ£ÐÍ*/
+
+    virtual void releaseAllStaticBuffers() = 0;
+    virtual void releaseAllXModels() = 0;
+    virtual int  releaseStaticBuffer(int staticID) = 0;
+    virtual int  releaseXMode(int xModelID) = 0;
+    virtual int  loadXMode(char *file, int *xModelID) = 0;
+    virtual int  loadXMode(char *file, int xModelID) = 0;
+
+    virtual int  renderXMode(int xModelID) = 0;
+
+    void releaseAllGUIs() {
+        for (int i = 0; i < m_totalGUIs; ++i) {
+            m_guiList[i].shutDown();
+        }
+        m_totalGUIs = 0;
+        if (m_guiList) {
+            delete[] m_guiList;
+            m_guiList = NULL;
+        }
+    }
 
     bool createGUI(int &id) {
         if (!m_guiList) {

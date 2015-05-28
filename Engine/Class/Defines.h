@@ -9,6 +9,10 @@
 #define DEFINES_FAIL      0
 #define WinHWND           HWND
 
+#define LEFT_MOUSE_BUTTON       0
+#define RIGHT_MOUSE_BUTTON      1
+
+#pragma  warning(disable:4996)
 //光源类型
 #define LIGHT_POINT       1
 #define LIGHT_SPOT        2
@@ -20,6 +24,8 @@
 							   (((r)&0xff)<<16)|(((g)&0xff)<<8)|\
 							   ((b)&0xff)))
 #define GUI_FVF         2
+#define MV_FVF          3//模型顶点
+
 #define GUI_STATICTEXT  1//静态文本
 #define GUI_BUTTON      2//按钮
 #define GUI_BACKDROP    3//背景
@@ -28,7 +34,10 @@
 #define GUI_BUTTON_OVER 2
 #define GUI_BUTTON_DOWN 3
 
+#define KEYS_SIZE       256
+
 #define D3DFVF_GUI (D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1)
+#define D3DFVF_MV  (D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_DIFFUSE|D3DFVF_TEX1)
 
 //顶点类型
 typedef long VertexType;

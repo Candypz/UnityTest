@@ -8,6 +8,7 @@
 
 #pragma comment(lib,"d3d9.lib")
 #pragma comment(lib,"d3dx9.lib")
+#pragma comment(lib,"dxguid.lib")
 
 struct stD3DStaticBuffer {
     stD3DStaticBuffer() :vbPtr(0), ibPtr(0), nubVerts(0), numIndices(0), stride(0), fvf(0), primType(NULL_TYPE) {}
@@ -20,6 +21,43 @@ struct stD3DStaticBuffer {
     unsigned long fvf;
     PrimType primType;//绘制基本类型
 
+};
+
+class XModel {
+public:
+    XModel() {
+        model = NULL;
+        numMaterials = 0;
+        matList = NULL;
+        textureList = NULL;
+    }
+    LPD3DXMESH model;
+    unsigned long numMaterials;
+    D3DMATERIAL9 *matList;
+    LPDIRECT3DTEXTURE9 *textureList;
+
+    void shoutDown() {
+        if (model!=NULL) {
+            model->Release();
+            model = NULL;
+        }
+        if (textureList) {
+            for (unsigned long i = 0; i < numMaterials; i++) {
+                if (textureList[i]) {
+                    textureList[i]->Release();
+                    textureList[i] = NULL;
+                }
+            }
+        }
+        if (matList!=NULL) {
+            delete[] matList;
+            matList = NULL;
+        }
+        if (textureList!=NULL) {
+            delete[] textureList;
+            textureList = NULL;
+        }
+    }
 };
 
 struct stD3DTexture {
@@ -92,6 +130,15 @@ public:
     bool addGUIStaticText(int guiID, int id, char *text, int x, int y, unsigned long color, int fontID);
     bool addGUIButton(int guiID, int id, int x, int y, char *up, char *over, char *down);
     void processGUI(int guiID, bool LMBDown, int mouseX, int mouseY, void(*funcPtr)(int id, int state));
+
+    void releaseAllStaticBuffers();
+    void releaseAllXModels();
+    int  releaseStaticBuffer(int staticID);
+    int  releaseXMode(int xModelID);
+    int  loadXMode(char *file, int *xModelID);
+    int  loadXMode(char *file, int xModelID);
+
+    int  renderXMode(int xModelID);
 private:
     void oneTimeInit();
 
@@ -100,6 +147,9 @@ private:
     LPDIRECT3D9 m_direct3D;
     LPDIRECT3DDEVICE9 m_device;
     bool m_renderingScene;
+
+    XModel *m_xModels;
+    int m_numXModels;
 
     LPD3DXFONT *m_fonts;//字体
 

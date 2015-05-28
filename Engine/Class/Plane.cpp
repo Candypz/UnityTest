@@ -48,7 +48,7 @@ void CPlane::CreatePlaneFromTri(CVector3 &v1, CVector3 &v2, CVector3 &v3)
 }
 
 
-bool CPlane::Intersect(CPlane &p2, CPlane &p3, CVector3 *intersectPoint)
+bool CPlane::intersect(CPlane &p2, CPlane &p3, CVector3 *intersectPoint)
 {
    CVector3 temp;
    CVector3 normal(a, b, c);
@@ -80,7 +80,7 @@ bool CPlane::Intersect(CPlane &p2, CPlane &p3, CVector3 *intersectPoint)
 }
 
 
-bool CPlane::Intersect(CPlane &pl, CVector3 *intersectPoint)
+bool CPlane::intersect(CPlane &pl, CVector3 *intersectPoint)
 {
    CVector3 cross;
    CVector3 normal(a, b, c);
@@ -113,7 +113,7 @@ bool CPlane::Intersect(CPlane &pl, CVector3 *intersectPoint)
 }
 
 
-bool CPlane::Intersect(CPlane &pl, CRay *intersect)
+bool CPlane::intersect(CPlane &pl, CRay *intersect)
 {
    CVector3 cross;
    CVector3 normal(a, b, c);

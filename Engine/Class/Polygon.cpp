@@ -74,7 +74,7 @@ void CPolygon::Clip(CPlane &pl, CPolygon *front, CPolygon *back)
                length = ray.m_direction.GetLength();
                ray.m_direction.Normal();
                
-               if(ray.Intersect(pl, false, length, &intersectPoint, 0) &&
+               if(ray.intersect(pl, false, length, &intersectPoint, 0) &&
                   (v1Type != UGP_ON_PLANE))
                   {
                      frontVecs[frontIndex++] = intersectPoint;
@@ -137,14 +137,14 @@ void CPolygon::Clip(CPlane &pl, CPolygon *front, CPolygon *back)
 }
 
 
-bool CPolygon::Intersect(CRay &ray, bool cull, float *dist)
+bool CPolygon::intersect(CRay &ray, bool cull, float *dist)
 {
-   if(!ray.Intersect(m_vertexList[0], m_vertexList[1],
+   if(!ray.intersect(m_vertexList[0], m_vertexList[1],
       m_vertexList[2], false, dist)) return false;
    
    if(!cull)
       {
-         if(!ray.Intersect(m_vertexList[2], m_vertexList[1],
+         if(!ray.intersect(m_vertexList[2], m_vertexList[1],
             m_vertexList[0], false, dist)) return false;
       }
    

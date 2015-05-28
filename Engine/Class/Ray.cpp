@@ -8,37 +8,37 @@
 #include"Ray.h"
 
 
-bool CRay::Intersect(CVector3 &pos, float radius, float *dist)
+bool CRay::intersect(CVector3 &pos, float radius, float *dist)
 {
    CVector3 RSDir;
 
    float RayToSphereLength = 0.0f;
-   float IntersectPoint = 0.0f;
+   float intersectPoint = 0.0f;
    float SquaredPoint = 0.0f;
 
    // Get the ray/sphere direction.
    RSDir = pos - m_origin;
 
    RayToSphereLength = RSDir.DotProduct3(RSDir);
-   IntersectPoint = RSDir.DotProduct3(m_direction);
+   intersectPoint = RSDir.DotProduct3(m_direction);
 
    // If true no collision.
-   if(IntersectPoint < 0 ) return false;
+   if(intersectPoint < 0 ) return false;
 
    SquaredPoint = (radius * radius) - RayToSphereLength +
-                  (IntersectPoint * IntersectPoint);
+                  (intersectPoint * intersectPoint);
 
    // If this is less than zero then the ray does not hit.
    if(SquaredPoint < 0) return false;
 
    // Else it does hit the sphere and we record the results.
-   if(dist) *dist = IntersectPoint - (float)sqrt(SquaredPoint);
+   if(dist) *dist = intersectPoint - (float)sqrt(SquaredPoint);
 
    return true;
 }
 
 
-bool CRay::Intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3,
+bool CRay::intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3,
                      bool cull, float *dist)
 {
    // Store these vectors between the points for future use.
@@ -82,7 +82,7 @@ bool CRay::Intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3,
 }
 
 
-bool CRay::Intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3,
+bool CRay::intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3,
                      bool cull, float length, float *dist)
 {
    // Store these vectors between the points for future use.
@@ -133,7 +133,7 @@ bool CRay::Intersect(CVector3 &p1, CVector3 &p2, CVector3 &p3,
 }
 
 
-bool CRay::Intersect(CPlane &pl, bool cull,
+bool CRay::intersect(CPlane &pl, bool cull,
                      CVector3 *intersectPoint, float *dist){
    CVector3 normal(pl.a, pl.b, pl.c);
 
@@ -158,7 +158,7 @@ bool CRay::Intersect(CPlane &pl, bool cull,
 }
 
 
-bool CRay::Intersect(CPlane &pl, bool cull, float length,
+bool CRay::intersect(CPlane &pl, bool cull, float length,
                      CVector3 *intersectPoint, float *dist)
 {
    CVector3 normal(pl.a, pl.b, pl.c);

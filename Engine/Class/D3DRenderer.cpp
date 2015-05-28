@@ -52,6 +52,9 @@ unsigned long createD3DFvf(int flags) {
     if (flags == GUI_FVF) {
         fvf = D3DFVF_GUI;
     }
+    if (flags == MV_FVF) {
+        fvf = D3DFVF_MV;
+    }
     return fvf;
 }
 
@@ -66,6 +69,9 @@ D3DRenderer::D3DRenderer() {
     m_textureList = NULL;
     m_numTextures = 0;
 
+    m_xModels = NULL;
+    m_numXModels = 0;
+
     m_fonts = NULL;
     m_totlFonts = 0;
 
@@ -77,7 +83,7 @@ D3DRenderer::~D3DRenderer() {
     shutDown();
 }
 
-bool D3DRenderer::initialize(int w, int h, WinHWND hWnd, bool full,MS_TYPE ms) {
+bool D3DRenderer::initialize(int w, int h, WinHWND hWnd, bool full, MS_TYPE ms) {
     //重新开始时关闭
     shutDown();
 
@@ -313,21 +319,8 @@ int D3DRenderer::createStaticBuffer(VertexType vType, PrimType primType, int tot
 }
 
 void D3DRenderer::shutDown() {
-    for (int i = 0; i < m_numStaticBuffers; ++i) {
-        if (m_staticBufferList[i].vbPtr) {
-            m_staticBufferList[i].vbPtr->Release();
-            m_staticBufferList[i].vbPtr = NULL;
-        }
-        if (m_staticBufferList[i].ibPtr) {
-            m_staticBufferList[i].ibPtr->Release();
-            m_staticBufferList[i].ibPtr = NULL;
-        }
-    }
-    m_numStaticBuffers = 0;
-    if (m_staticBufferList) {
-        delete[] m_staticBufferList;
-        m_staticBufferList = NULL;
-    }
+    releaseAllStaticBuffers();
+    releaseAllXModels();
 
     for (int i = 0; i < m_totalGUIs; ++i) {
         m_guiList[i].shutDown();
@@ -1058,4 +1051,152 @@ void D3DRenderer::setDetailMapping() {
     m_device->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_ADDSIGNED);
     m_device->SetTextureStageState(1, D3DTSS_COLORARG0, D3DTA_TEXTURE);
     m_device->SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+}
+
+int  D3DRenderer::loadXMode(char *file, int xModelID) {
+    if (!file || xModelID < 0 || xModelID >= m_numXModels || !m_xModels) {
+        return DEFINES_FAIL;
+    }
+    m_xModels[xModelID].shoutDown();
+
+    LPD3DXBUFFER matBuffer = NULL;
+    unsigned long numMats = 0;
+
+    if (FAILED(D3DXLoadMeshFromX(file, D3DXMESH_SYSTEMMEM, m_device, NULL, &matBuffer, NULL, &numMats, &m_xModels[xModelID].model))) {
+        return DEFINES_FAIL;
+    }
+    m_xModels[xModelID].numMaterials = numMats;
+    m_xModels[xModelID].matList = new D3DMATERIAL9[numMats];
+    m_xModels[xModelID].textureList = new LPDIRECT3DTEXTURE9[numMats];
+
+    D3DXMATERIAL *mat = (D3DXMATERIAL*)matBuffer->GetBufferPointer();
+    for (unsigned long i = 0; i < numMats; ++i) {
+        m_xModels[xModelID].matList[i] = mat[i].MatD3D;
+
+        if (FAILED(D3DXCreateTextureFromFile(m_device, mat[i].pTextureFilename, &m_xModels[xModelID].textureList[i]))) {
+            m_xModels[xModelID].textureList[i] = NULL;
+        }
+    }
+    if (matBuffer != NULL) {
+        matBuffer->Release();
+        matBuffer = NULL;
+    }
+
+    return DEFINES_OK;
+
+}
+
+int  D3DRenderer::loadXMode(char *file, int *xModelID) {
+    if (!file) {
+        return DEFINES_FAIL;
+    }
+    if (!m_xModels) {
+        m_xModels = new XModel[1];
+        if (!m_xModels) {
+            return DEFINES_FAIL;
+        }
+    }
+    else {
+        XModel *temp;
+        temp = new XModel[m_numXModels + 1];
+        memcpy(temp, m_xModels, sizeof(stModelVertex)*m_numXModels);
+        delete[]m_xModels;
+        m_xModels = temp;
+    }
+    LPD3DXBUFFER matBuffer = NULL;
+    unsigned long numMats = 0;
+
+    if (FAILED(D3DXLoadMeshFromX(file, D3DXMESH_SYSTEMMEM, m_device, NULL, &matBuffer, NULL, &numMats, &m_xModels[m_numXModels].model))) {
+        return DEFINES_FAIL;
+    }
+    m_xModels[m_numXModels].numMaterials = numMats;
+    m_xModels[m_numXModels].matList = new D3DMATERIAL9[numMats];
+    m_xModels[m_numXModels].textureList = new LPDIRECT3DTEXTURE9[numMats];
+
+    D3DXMATERIAL *mat = (D3DXMATERIAL*)matBuffer->GetBufferPointer();
+    for (unsigned long i = 0; i < numMats; ++i) {
+        m_xModels[m_numXModels].matList[i] = mat[i].MatD3D;
+
+        if (FAILED(D3DXCreateTextureFromFile(m_device, mat[i].pTextureFilename, &m_xModels[m_numXModels].textureList[i]))) {
+            m_xModels[m_numXModels].textureList[i] = NULL;
+        }
+    }
+    if (matBuffer != NULL) {
+        matBuffer->Release();
+        matBuffer = NULL;
+    }
+    *xModelID = m_numXModels;
+    m_numXModels++;
+
+    return DEFINES_OK;
+}
+
+int D3DRenderer::renderXMode(int xModelID) {
+    if (!m_xModels || xModelID>m_numXModels || xModelID < 0) {
+        return DEFINES_FAIL;
+    }
+    m_device->SetIndices(NULL);
+    m_device->SetStreamSource(0, NULL, 0, 0);
+    m_device->SetFVF(0);
+
+    for (unsigned long i = 0; i < m_xModels[xModelID].numMaterials; ++i) {
+        m_device->SetMaterial(&m_xModels[xModelID].matList[i]);
+        m_device->SetTexture(0, m_xModels[xModelID].textureList[i]);
+        m_xModels[xModelID].model->DrawSubset(i);
+    }
+    return DEFINES_OK;
+}
+
+int  D3DRenderer::releaseXMode(int xModelID) {
+    if (!m_xModels || xModelID>m_numXModels || xModelID < 0) {
+        return DEFINES_FAIL;
+    }
+    m_xModels[xModelID].shoutDown();
+
+    return DEFINES_OK;
+}
+
+void D3DRenderer::releaseAllXModels() {
+    for (int i = 0; i < m_numXModels; ++i) {
+        m_xModels[i].shoutDown();
+    }
+    m_numXModels = 0;
+    if (m_xModels) {
+        delete[]m_xModels;
+        m_xModels = NULL;
+    }
+}
+
+void D3DRenderer::releaseAllStaticBuffers() {
+    for (int i = 0; i < m_numStaticBuffers; ++i) {
+        releaseStaticBuffer(i);
+    }
+    m_numStaticBuffers = 0;
+    if (m_numStaticBuffers) {
+        delete[] m_staticBufferList;
+        m_staticBufferList = NULL;
+    }
+}
+
+
+int  D3DRenderer::releaseStaticBuffer(int staticID) {
+    if (staticID < 0 || staticID >= m_numStaticBuffers || !m_staticBufferList) {
+        return DEFINES_FAIL;
+    }
+
+    if (m_staticBufferList[staticID].vbPtr) {
+        m_staticBufferList[staticID].vbPtr->Release();
+        m_staticBufferList[staticID].vbPtr = NULL;
+    }
+    if (m_staticBufferList[staticID].ibPtr) {
+        m_staticBufferList[staticID].ibPtr->Release();
+        m_staticBufferList[staticID].ibPtr = NULL;
+
+    }
+    m_numStaticBuffers = 0;
+    if (m_staticBufferList) {
+        delete[] m_staticBufferList;
+        m_staticBufferList = NULL;
+    }
+    return DEFINES_OK;
 }
